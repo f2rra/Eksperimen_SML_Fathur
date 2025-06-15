@@ -1,4 +1,4 @@
-name: Fetch, Process, and Store BMKG Data
+name: Testing Trigger Fetch, Process, and Store BMKG Data
 on:
   schedule:
     - cron: "*/10 * * * *" # Setiap 1 jam (UTC)
