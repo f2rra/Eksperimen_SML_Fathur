@@ -1,7 +1,7 @@
 name: Fetch, Process, and Store BMKG Data
 on:
   schedule:
-    - cron: 0 */1 * * * # Setiap 1 jam (UTC)
+    - cron: "*/10 * * * *" # Setiap 1 jam (UTC)
   workflow_dispatch: # Memungkinkan trigger manual
 
 jobs:
