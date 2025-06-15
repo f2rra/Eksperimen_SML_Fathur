@@ -7,7 +7,7 @@ from datetime import datetime
 # Konfigurasi
 URL_TEMPLATE = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4={kode_wilayah}"
 KODE_WILAYAH = "36.71.07.1003"  # Karawaci Baru
-OUTPUT_CSV = "data-raw/dummy.csv"
+OUTPUT_CSV = "data/dummy.csv"
 MAX_ROWS = 1000  # Batas maksimal baris
 
 def fetch_and_process_data():
@@ -92,24 +92,32 @@ def update_csv(new_data):
         # Buat direktori jika belum ada
         os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
         
-        # Baca data existing jika file ada
-        if os.path.exists(OUTPUT_CSV):
-            existing_df = pd.read_csv(OUTPUT_CSV, parse_dates=['local_datetime', 'fetch_time'])
-        else:
-            existing_df = pd.DataFrame()
+        # Inisialisasi DataFrame kosong jika file belum ada
+        existing_df = pd.DataFrame()
         
-        # Cek jika ada data yang sudah ada sebelumnya
-        if not existing_df.empty:
-            # Buat unique key untuk data existing
-            existing_df['unique_key'] = existing_df['local_datetime'].astype(str) + '_' + existing_df['hour'].astype(str)
-            
-            # Filter data baru yang belum ada di data existing
-            new_data = new_data[~new_data['unique_key'].isin(existing_df['unique_key'])]
-            
-            # Jika tidak ada data baru, hentikan proses
-            if new_data.empty:
-                print("Tidak ada data baru untuk ditambahkan.")
-                return existing_df
+        # Cek jika file CSV sudah ada
+        if os.path.exists(OUTPUT_CSV):
+            try:
+                # Baca data existing
+                existing_df = pd.read_csv(OUTPUT_CSV, parse_dates=['local_datetime', 'fetch_time'])
+                
+                # Pastikan kolom unique_key ada di data existing
+                if 'unique_key' not in existing_df.columns:
+                    # Jika tidak ada, buat kolom unique_key
+                    if 'hour' not in existing_df.columns:
+                        existing_df['hour'] = pd.to_datetime(existing_df['local_datetime']).dt.hour
+                    existing_df['unique_key'] = existing_df['local_datetime'].astype(str) + '_' + existing_df['hour'].astype(str)
+                
+                # Hapus data lama dengan unique_key yang sama
+                keys_to_update = new_data['unique_key'].tolist()
+                existing_df = existing_df[~existing_df['unique_key'].isin(keys_to_update)]
+                
+                print(f"Ditemukan {len(existing_df)} baris data existing")
+            except Exception as e:
+                print(f"Warning: Gagal membaca file CSV yang ada. Membuat file baru. Error: {str(e)}")
+                existing_df = pd.DataFrame()
+        else:
+            print("File CSV belum ditemukan. Akan membuat file baru.")
         
         # Gabungkan data baru dengan data existing
         combined_df = pd.concat([existing_df, new_data], ignore_index=True)
