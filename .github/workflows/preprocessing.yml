@@ -23,7 +23,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pandas requests joblib
+          pip install -r requirements.txt
           sudo apt-get update
           sudo apt-get install -y libgomp1
 
