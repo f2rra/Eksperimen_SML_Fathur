@@ -104,6 +104,9 @@ def update_csv(new_data):
                 # Baca data existing
                 existing_df = pd.read_csv(OUTPUT_CSV, parse_dates=['local_datetime', 'fetch_time'])
                 
+                # Memastikan data unique_key bertipe string
+                existing_df['unique_key'] = existing_df['unique_key'].astype(str)
+
                 # Pastikan kolom unique_key ada di data existing
                 if 'unique_key' not in existing_df.columns:
                     existing_df['unique_key'] = existing_df['local_datetime'].astype(str).map(lambda x: re.sub(r'[\s\-:]', '', x)).astype(str)
