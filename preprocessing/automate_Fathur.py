@@ -147,7 +147,7 @@ def preprocess_data(df):
     try:
         # Load preprocessing pipeline
         import joblib
-        pipeline = joblib.load('preprocessing_pipeline.pkl')
+        pipeline = joblib.load('preprocessing/preprocessing_pipeline.pkl')
         
         # Ekstrak fitur waktu
         df['day_of_week'] = df['local_datetime'].dt.dayofweek
