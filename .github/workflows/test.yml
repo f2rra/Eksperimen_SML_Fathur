@@ -33,6 +33,6 @@ jobs:
           export TZ='Asia/Jakarta'
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data-raw/dummy.csv
+          git add data/dummy.csv
           git commit -m "update weather data [$(date +'%Y-%m-%d %H:%M') WIB]"
           git push
