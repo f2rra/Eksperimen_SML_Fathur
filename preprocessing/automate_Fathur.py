@@ -7,7 +7,7 @@ from datetime import datetime
 # Konfigurasi
 URL_TEMPLATE = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4={kode_wilayah}"
 KODE_WILAYAH = "36.71.07.1003"  # Karawaci Baru
-OUTPUT_CSV = "data/dummy.csv"
+OUTPUT_CSV = "data/weather.csv"
 MAX_ROWS = 1000  # Batas maksimal baris
 
 def fetch_and_process_data():
