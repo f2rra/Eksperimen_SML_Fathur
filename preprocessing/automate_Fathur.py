@@ -141,6 +141,35 @@ def update_csv(new_data):
     except Exception as e:
         print(f"Error updating CSV: {str(e)}")
         exit(1)
+    
+def preprocess_data(df):
+    """Preprocess data untuk model machine learning"""
+    try:
+        # Load preprocessing pipeline
+        import joblib
+        pipeline = joblib.load('preprocessing_pipeline.pkl')
+        
+        # Ekstrak fitur waktu
+        df['day_of_week'] = df['local_datetime'].dt.dayofweek
+        df['month'] = df['local_datetime'].dt.month
+        
+        # Pilih fitur yang relevan
+        features = ['hour', 'day_of_week', 'month', 'temperature', 'humidity', 
+                    'wind_speed', 'cloud_cover', 'precipitation', 'weather_description']
+        
+        # Preprocessing data
+        preprocessed_data = pipeline.transform(df[features])
+        
+        # Simpan data yang sudah diproses
+        preprocessed_df = pd.DataFrame(preprocessed_data)
+        preprocessed_df.to_csv("preprocessing/weather_preprocessed.csv", index=False)
+        print("Data berhasil diproses dan disimpan")
+        
+        return preprocessed_df
+        
+    except Exception as e:
+        print(f"Error dalam preprocessing: {str(e)}")
+        return None
 
 if __name__ == "__main__":
     # Ambil dan proses data baru
@@ -148,6 +177,9 @@ if __name__ == "__main__":
     
     # Update file CSV
     updated_df = update_csv(new_df)
+
+    # Preprocess data untuk machine learning
+    preprocessed_df = preprocess_data(updated_df.copy())
     
     # Tampilkan ringkasan
     print("\nRingkasan Data:")
