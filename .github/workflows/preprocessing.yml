@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - development
-  schedule:
-    - cron: "0 */1 * * *" # Setiap 1 jam (UTC)
   workflow_dispatch: # Memungkinkan trigger manual
 
 jobs:
