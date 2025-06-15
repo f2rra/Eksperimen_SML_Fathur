@@ -79,7 +79,9 @@ def fetch_and_process_data():
         df['fetch_time'] = datetime.now()
         
         # Tambahkan unique key untuk mencegah duplikasi
-        df['unique_key'] = df['local_datetime'].astype(str) + '_' + df['hour'].astype(str)
+        # df['unique_key'] = df['local_datetime'].astype(str) + '_' + df['hour'].astype(str)
+        df['unique_key'] = df['local_datetime'].astype(str).map(lambda x: re.sub(r'[\s\-:]', '', x))
+        
         
         return df
         
@@ -103,10 +105,7 @@ def update_csv(new_data):
                 
                 # Pastikan kolom unique_key ada di data existing
                 if 'unique_key' not in existing_df.columns:
-                    # Jika tidak ada, buat kolom unique_key
-                    if 'hour' not in existing_df.columns:
-                        existing_df['hour'] = pd.to_datetime(existing_df['local_datetime']).dt.hour
-                    existing_df['unique_key'] = existing_df['local_datetime'].astype(str) + '_' + existing_df['hour'].astype(str)
+                    existing_df['unique_key'] = existing_df['local_datetime'].astype(str).map(lambda x: re.sub(r'[\s\-:]', '', x))
                 
                 # Hapus data lama dengan unique_key yang sama
                 keys_to_update = new_data['unique_key'].tolist()
