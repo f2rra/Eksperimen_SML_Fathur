@@ -69,10 +69,6 @@ def fetch_and_process_data():
             'weather_desc': 'weather_description'
         })
         
-        # Tambahkan kolom turunan
-        df['hour'] = df['local_datetime'].dt.hour
-        df['date'] = df['local_datetime'].dt.date
-        
         # Urutkan berdasarkan waktu
         df = df.sort_values('local_datetime').reset_index(drop=True)
         
@@ -80,7 +76,6 @@ def fetch_and_process_data():
         df['fetch_time'] = datetime.now()
         
         # Tambahkan unique key untuk mencegah duplikasi
-        # df['unique_key'] = df['local_datetime'].astype(str) + '_' + df['hour'].astype(str)
         df['unique_key'] = df['local_datetime'].astype(str).map(lambda x: re.sub(r'[\s\-:]', '', x)).astype(str)
         
         
@@ -150,18 +145,28 @@ def preprocess_data(df):
         pipeline = joblib.load('preprocessing/preprocessing_pipeline.pkl')
         
         # Ekstrak fitur waktu
+        df['hour'] = df['local_datetime'].dt.hour
         df['day_of_week'] = df['local_datetime'].dt.dayofweek
         df['month'] = df['local_datetime'].dt.month
         
         # Pilih fitur yang relevan
         features = ['hour', 'day_of_week', 'month', 'temperature', 'humidity', 
                     'wind_speed', 'cloud_cover', 'precipitation', 'weather_description']
+
+        # Dapatkan nama fitur
+        feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
+        
+        # Bersihkan nama fitur dengan regex
+        clean_feature_names = [
+            re.sub(r'^(num|cat)__', '', name)  # Hapus prefix num__ atau cat__
+            for name in feature_names
+        ]
         
         # Preprocessing data
         preprocessed_data = pipeline.transform(df[features])
         
         # Simpan data yang sudah diproses
-        preprocessed_df = pd.DataFrame(preprocessed_data)
+        preprocessed_df = pd.DataFrame(preprocessed_data, columns=clean_feature_names)
         preprocessed_df.to_csv("preprocessing/weather_preprocessed.csv", index=False)
         print("Data berhasil diproses dan disimpan")
         
