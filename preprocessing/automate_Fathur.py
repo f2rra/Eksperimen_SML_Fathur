@@ -2,8 +2,11 @@ import requests
 import re
 import pandas as pd
 import os
-import json
 from datetime import datetime
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+import joblib
 
 # Konfigurasi
 URL_TEMPLATE = "https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4={kode_wilayah}"
@@ -140,32 +143,43 @@ def update_csv(new_data):
 def preprocess_data(df):
     """Preprocess data untuk model machine learning"""
     try:
-        # Load preprocessing pipeline
-        import joblib
-        pipeline = joblib.load('preprocessing/preprocessing_pipeline.pkl')
-        
-        # Ekstrak fitur waktu
+        # 1. Penanganan data duplikat
+        df = df.drop_duplicates(subset=['unique_key'], keep='last')
+
+        # 2. Ekstrak fitur waktu
         df['hour'] = df['local_datetime'].dt.hour
         df['day_of_week'] = df['local_datetime'].dt.dayofweek
         df['month'] = df['local_datetime'].dt.month
-        
-        # Pilih fitur yang relevan
-        features = ['hour', 'day_of_week', 'month', 'temperature', 'humidity', 
+
+        # 3. Pemilihan fitur
+        features = ['hour','day_of_week', 'month', 'temperature', 'humidity', 
                     'wind_speed', 'cloud_cover', 'precipitation', 'weather_description']
 
-        # Dapatkan nama fitur
+        df = df[features]
+
+        # 4. Transformasi fitur kategorikal
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('num', StandardScaler(), ['hour','day_of_week', 'month', 'temperature', 
+                                        'humidity', 'wind_speed', 'cloud_cover', 'precipitation']),
+                ('cat', OneHotEncoder(), ['weather_description'])
+            ])
+
+        # 5. Buat pipeline
+        pipeline = Pipeline(steps=[('preprocessor', preprocessor)])
+
+        # 6. Transformasi data
+        preprocessed_data = pipeline.fit_transform(df)
         feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
-        
-        # Bersihkan nama fitur dengan regex
         clean_feature_names = [
             re.sub(r'^(num|cat)__', '', name)  # Hapus prefix num__ atau cat__
             for name in feature_names
         ]
+
+        # 7. Simpan pipeline untuk penggunaan di automasi
+        joblib.dump(pipeline, 'preprocessing_pipeline.pkl')
         
-        # Preprocessing data
-        preprocessed_data = pipeline.transform(df[features])
-        
-        # Simpan data yang sudah diproses
+        # 8. Simpan data yang sudah diproses
         preprocessed_df = pd.DataFrame(preprocessed_data, columns=clean_feature_names)
         preprocessed_df.to_csv("preprocessing/weather_preprocessed.csv", index=False)
         print("Data berhasil diproses dan disimpan")
@@ -173,7 +187,7 @@ def preprocess_data(df):
         return preprocessed_df
         
     except Exception as e:
-        print(f"Error dalam preprocessing: {str(e)}")
+        print(f"Error dalam preprocessing : {str(e)}")
         return None
 
 if __name__ == "__main__":
