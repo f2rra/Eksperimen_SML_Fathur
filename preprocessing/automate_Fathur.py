@@ -157,7 +157,7 @@ def preprocess_data(df):
 
         df = df[features]
 
-        # 4. Transformasi fitur kategorikal
+        # 4. Transformasi fitur kategorikal dan numerik
         preprocessor = ColumnTransformer(
             transformers=[
                 ('num', StandardScaler(), ['hour','day_of_week', 'month', 'temperature', 
@@ -175,11 +175,8 @@ def preprocess_data(df):
             re.sub(r'^(num|cat)__', '', name)  # Hapus prefix num__ atau cat__
             for name in feature_names
         ]
-
-        # 7. Simpan pipeline untuk penggunaan di automasi
-        joblib.dump(pipeline, 'preprocessing_pipeline.pkl')
         
-        # 8. Simpan data yang sudah diproses
+        # 7. Simpan data yang sudah diproses
         preprocessed_df = pd.DataFrame(preprocessed_data, columns=clean_feature_names)
         preprocessed_df.to_csv("preprocessing/weather_preprocessed.csv", index=False)
         print("Data berhasil diproses dan disimpan")
